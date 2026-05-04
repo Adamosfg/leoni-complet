@@ -4,7 +4,7 @@
  */
 
 import { useDashboard } from '../../context/DashboardContext';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Shield, AlertCircle, Activity } from 'lucide-react';
 import { differenceInDays, parseISO, startOfDay, subDays } from 'date-fns';
@@ -13,6 +13,26 @@ import CardShell from '../shared/CardShell';
 export default function InjuryTrackerCard({ number }: { number?: number }) {
   const { accidents, lastResetDate } = useDashboard();
   const [testOffset, setTestOffset] = useState(0);
+
+  // Auto-increment testOffset every 24 hours
+  useEffect(() => {
+    const lastTimestamp = localStorage.getItem('lastSafetyDaysIncrement');
+    const now = Date.now();
+    
+    if (!lastTimestamp) {
+      localStorage.setItem('lastSafetyDaysIncrement', now.toString());
+      return;
+    }
+    
+    const lastTime = parseInt(lastTimestamp);
+    const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
+    
+    if (hoursPassed >= 24) {
+      const incrementCount = Math.floor(hoursPassed / 24);
+      setTestOffset(prev => prev + incrementCount);
+      localStorage.setItem('lastSafetyDaysIncrement', now.toString());
+    }
+  }, []);
 
   // Calculate counts per body part
   const counts = useMemo(() => {
@@ -146,8 +166,7 @@ export default function InjuryTrackerCard({ number }: { number?: number }) {
         {/* Right: Stats */}
         <div className="flex-1 flex flex-col gap-2">
           <div 
-            onClick={() => setTestOffset(prev => prev + 1)}
-            className={`p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 shadow-sm border ${isIncidentToday ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}
+            className={`p-3 rounded-2xl flex flex-col items-center justify-center shadow-sm border ${isIncidentToday ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}
           >
             <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Safe Days</span>
             <span className={`text-3xl font-black ${isIncidentToday ? 'text-[#dc2626]' : 'text-[#16a34a]'}`}>{daysWithout}</span>
@@ -160,7 +179,9 @@ export default function InjuryTrackerCard({ number }: { number?: number }) {
 
           <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Risk</span>
-            <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: riskLevel.color === '#22c55e' ? '#16a34a' : riskLevel.color === '#f59e0b' ? '#d97706' : '#dc2626' }}>{riskLevel.label}</span>
+            <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: riskLevel.color === '#22c55e' ? '#16a34a' : riskLevel.color === '#f59e0b' ? '#d97706' : '#dc2626' }}>
+              {riskLevel.label}
+            </span>
           </div>
         </div>
       </div>
