@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { 
   EFF_DATA, 
@@ -14,7 +9,7 @@ import {
 } from '../constants/productionData';
 import { api, getUserRole, getUsername, clearAuthData } from '../api';
 
-export type UserRole = 'supervisor' | 'assistant' | 'hacker' | 'assistante';
+export type UserRole = 'supervisor' | 'assistant' | 'admin' | 'assistante';
 export type Page =
   | 'dashboard'
   | 'data'
@@ -23,9 +18,6 @@ export type Page =
   | 'schedule'
   | 'satisfaction'
   | 'fives'
-  | 'efficiency'
-  | 'produced-hours'
-  | 'scrap'
   | 'admin';
 
 export type IncidentType = 
@@ -307,7 +299,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const login = (role: UserRole) => {
     setUser({
-      name: role === 'supervisor' ? 'Adam Supervisor' : role === 'hacker' ? 'Admin' : 'User',
+      name: role === 'supervisor' ? 'Adam Supervisor' : role === 'admin' ? 'Admin' : 'User',
       role,
       email: 'user@leoni.com',
     });
